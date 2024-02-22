@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <string.h>
+
+void multiplyMatrixVector(int matrix[3][3], int vector[3], int result[3]) {
+    for (int i = 0; i < 3; i++) {
+        result[i] = 0;
+        for (int j = 0; j < 3; j++) {
+            result[i] += matrix[i][j] * vector[j];
+        }
+        result[i] %= 26; // Apply modulo 26
+    }
+}
+
+void encryptHill(char plaintext[], int matrix[3][3]) {
+    int vector[3], result[3];
+
+    
+    int padding = (3 - (strlen(plaintext) % 3)) % 3;
+    char paddedText[strlen(plaintext) + padding + 1];
+    strcpy(paddedText, plaintext);
+
+    for (int i = 0; i < padding; i++) {
+        paddedText[strlen(plaintext) + i] = 'X';
+    }
+
+    paddedText[strlen(plaintext) + padding] = '\0';
+
+    
+    for (int i = 0; i < strlen(paddedText); i += 3) {
+      
+        for (int j = 0; j < 3; j++) {
+            vector[j] = paddedText[i + j] - 'A';
+        }
+
+        
+        multiplyMatrixVector(matrix, vector, result);
+
+        
+        for (int j = 0; j < 3; j++) {
+            printf("%c", result[j] + 'A');
+        }
+    }
+
+    printf("\n");
+}
+
+int main() {
+    int matrix[3][3] = {{6, 24, 1}, {13, 16, 10}, {20, 17, 15}};
+    char plaintext[100];
+
+  
+    printf("Enter the plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+
+  
+    plaintext[strcspn(plaintext, "\n")] = '\0';
+
+  
+    encryptHill(plaintext, matrix);
+
+    return 0;
+}
