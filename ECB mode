@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8 // Block size in bytes
+
+// Function to perform XOR operation on two blocks
+void xorBlocks(const unsigned char *block1, const unsigned char *block2, unsigned char *result) {
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        result[i] = block1[i] ^ block2[i];
+    }
+}
+
+// Function to encrypt plaintext using CBC mode
+void encryptCBC(const unsigned char *plaintext, const unsigned char *key, const unsigned char *iv, int num_blocks, unsigned char **ciphertext) {
+    // Allocate memory for ciphertext
+    *ciphertext = (unsigned char *)malloc(num_blocks * BLOCK_SIZE);
+
+    // Initialize previous ciphertext block with IV
+    unsigned char *prev_block = (unsigned char *)malloc(BLOCK_SIZE);
+    memcpy(prev_block, iv, BLOCK_SIZE);
+
+    // Encrypt each block
+    for (int i = 0; i < num_blocks; i++) {
+        // XOR plaintext block with previous ciphertext block
+        unsigned char xor_result[BLOCK_SIZE];
+        xorBlocks(plaintext + (i * BLOCK_SIZE), prev_block, xor_result);
+
+        // Encrypt using some encryption function (not implemented here)
+        // Replace the following line with your encryption function
+        memcpy((*ciphertext) + (i * BLOCK_SIZE), xor_result, BLOCK_SIZE);
+
+        // Update previous ciphertext block
+        memcpy(prev_block, (*ciphertext) + (i * BLOCK_SIZE), BLOCK_SIZE);
+    }
+
+    free(prev_block);
+}
+
+// Function to decrypt ciphertext using CBC mode
+void decryptCBC(const unsigned char *ciphertext, const unsigned char *key, const unsigned char *iv, int num_blocks, unsigned char **plaintext) {
+    // Allocate memory for plaintext
+    *plaintext = (unsigned char *)malloc(num_blocks * BLOCK_SIZE);
+
+    // Initialize previous ciphertext block with IV
+    unsigned char *prev_block = (unsigned char *)malloc(BLOCK_SIZE);
+    memcpy(prev_block, iv, BLOCK_SIZE);
+
+    // Decrypt each block
+    for (int i = 0; i < num_blocks; i++) {
+        // Decrypt using some decryption function (not implemented here)
+        // Replace the following line with your decryption function
+        // For demonstration, we simply copy ciphertext block as plaintext block
+        memcpy((*plaintext) + (i * BLOCK_SIZE), ciphertext + (i * BLOCK_SIZE), BLOCK_SIZE);
+
+        // XOR decrypted block with previous ciphertext block
+        xorBlocks((*plaintext) + (i * BLOCK_SIZE), prev_block, (*plaintext) + (i * BLOCK_SIZE));
+
+        // Update previous ciphertext block
+        memcpy(prev_block, ciphertext + (i * BLOCK_SIZE), BLOCK_SIZE);
+    }
+
+    free(prev_block);
+}
+
+int main() {
+    // Example data
+    unsigned char key[BLOCK_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+    unsigned char iv[BLOCK_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+    unsigned char plaintext[] = "0123456789ABCDEF0123456789ABCDEF";
+    int num_blocks = strlen(plaintext) / BLOCK_SIZE;
+
+    // Encrypt using CBC mode
+    unsigned char *ciphertext;
+    encryptCBC(plaintext, key, iv, num_blocks, &ciphertext);
+
+    // Introduce an error in the ciphertext (simulating transmission error)
+    ciphertext[8] ^= 0x01; // Flip a bit in the first block of ciphertext
+
+    // Decrypt using CBC mode
+    unsigned char *decrypted_plaintext;
+    decryptCBC(ciphertext, key, iv, num_blocks, &decrypted_plaintext);
+
+    // Display decrypted plaintext
+    printf("Decrypted plaintext: %s\n", decrypted_plaintext);
+
+    // Free allocated memory
+    free(ciphertext);
+    free(decrypted_plaintext);
+
+    return 0;
+}
