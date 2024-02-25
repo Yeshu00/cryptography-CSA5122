@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdint.h>
+
+// Initial permutation table
+const int initial_permutation[64] = {
+    58, 50, 42, 34, 26, 18, 10, 2,
+    60, 52, 44, 36, 28, 20, 12, 4,
+    62, 54, 46, 38, 30, 22, 14, 6,
+    64, 56, 48, 40, 32, 24, 16, 8,
+    57, 49, 41, 33, 25, 17, 9, 1,
+    59, 51, 43, 35, 27, 19, 11, 3,
+    61, 53, 45, 37, 29, 21, 13, 5,
+    63, 55, 47, 39, 31, 23, 15, 7
+};
+
+// Permutation table for shifting
+const int shift_table[16] = {
+    1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
+};
+
+// Key schedule permutation table
+const int key_permutation[56] = {
+    57, 49, 41, 33, 25, 17, 9,
+    1, 58, 50, 42, 34, 26, 18,
+    10, 2, 59, 51, 43, 35, 27,
+    19, 11, 3, 60, 52, 44, 36,
+    63, 55, 47, 39, 31, 23, 15,
+    7, 62, 54, 46, 38, 30, 22,
+    14, 6, 61, 53, 45, 37, 29,
+    21, 13, 5, 28, 20, 12, 4
+};
+
+// Compression permutation table for keys
+const int key_compression[48] = {
+    14, 17, 11, 24, 1, 5,
+    3, 28, 15, 6, 21, 10,
+    23, 19, 12, 4, 26, 8,
+    16, 7, 27, 20, 13, 2,
+    41, 52, 31, 37, 47, 55,
+    30, 40, 51, 45, 33, 48,
+    44, 49, 39, 56, 34, 53,
+    46, 42, 50, 36, 29, 32
+};
+
+// Function to perform permutation according to a given table
+void permute(const uint64_t input, uint64_t *output, const int *table, const int input_size, const int output_size) {
+    *output = 0;
+    for (int i = 0; i < output_size; i++) {
+        *output |= ((input >> (input_size - table[i])) & 1) << (output_size - i - 1);
+    }
+}
+
+// Function to generate subkeys
+void generateSubkeys(const uint64_t key, uint64_t subkeys[16]) {
+    // Permute the key according to the key_permutation table
+    uint64_t permuted_key;
+    permute(key, &permuted_key, key_permutation, 64, 56);
+
+    // Split the permuted key into two 28-bit halves
+    uint32_t left_half = permuted_key >> 28;
+    uint32_t right_half = permuted_key & 0x0FFFFFFF;
+
+    // Generate subkeys
+    for (int i = 0; i < 16; i++) {
+        // Apply key compression permutation to combine the halves
+        uint64_t combined = (((uint64_t)left_half) << 28) | right_half;
+        permute(combined, &subkeys[i], key_compression, 56, 48);
+
+        // Perform left circular shift on halves
+        uint32_t shift = shift_table[i];
+        left_half = ((left_half << shift) | (left_half >> (28 - shift))) & 0x0FFFFFFF;
+        right_half = ((right_half << shift) | (right_half >> (28 - shift))) & 0x0FFFFFFF;
+    }
+}
+
+int main() {
+    // Initial key (example)
+    uint64_t initial_key = 0x133457799BBCDFF1;
+
+    // Generate subkeys
+    uint64_t subkeys[16];
+    generateSubkeys(initial_key, subkeys);
+
+    // Display subkeys
+    printf("Subkeys:\n");
+    for (int i = 0; i < 16; i++) {
+        printf("K%d: %016llX\n", i + 1, subkeys[i]);
+    }
+
+    return 0;
+}
+
+
+
