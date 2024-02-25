@@ -1,0 +1,140 @@
+using System;
+using System.Collections.Generic;
+
+public class ColumnarTranspositionCipher
+{
+	
+	static readonly string key = "HACK";
+	static Dictionary<char, int> keyMap = new Dictionary<char, int>();
+
+	static void SetPermutationOrder()
+	{
+		
+		for (int i = 0; i < key.Length; i++)
+		{
+			keyMap[key[i]] = i;
+		}
+	}
+
+	static string EncryptMessage(string msg)
+	{
+		int row, col;
+		System.Text.StringBuilder cipher = new System.Text.StringBuilder();
+
+		
+		col = key.Length;
+
+		
+		row = (int)Math.Ceiling((double)msg.Length / col);
+
+		char[,] matrix = new char[row, col];
+
+		for (int i = 0, k = 0; i < row; i++)
+		{
+			for (int j = 0; j < col;)
+			{
+				if (k < msg.Length)
+				{
+					char ch = msg[k];
+					if (char.IsLetter(ch) || ch == ' ')
+					{
+						matrix[i, j] = ch;
+						j++;
+					}
+					k++;
+				}
+				else
+				{
+				
+					matrix[i, j] = '_';
+					j++;
+				}
+			}
+		}
+
+		foreach (var entry in new Dictionary<char, int>(keyMap))
+		{
+			int columnIndex = entry.Value;
+
+			
+			for (int i = 0; i < row; i++)
+			{
+				if (char.IsLetter(matrix[i, columnIndex]) || matrix[i, columnIndex] == ' ' || matrix[i, columnIndex] == '_')
+				{
+					cipher.Append(matrix[i, columnIndex]);
+				}
+			}
+		}
+
+		return cipher.ToString();
+	}
+
+	
+	static string DecryptMessage(string cipher)
+	{
+		
+		int col = key.Length;
+
+		int row = (int)Math.Ceiling((double)cipher.Length / col);
+		char[,] cipherMat = new char[row, col];
+
+	
+		int k = 0;
+		for (int j = 0; j < col; j++)
+		{
+			for (int i = 0; i < row; i++)
+			{
+				cipherMat[i, j] = cipher[k];
+				k++;
+			}
+		}
+
+	
+		int index = 0;
+		foreach (var entry in new Dictionary<char, int>(keyMap))
+		{
+			keyMap[entry.Key] = index++;
+		}
+
+		
+		char[,] decCipher = new char[row, col];
+		foreach (var entry in keyMap)
+		{
+			int columnIndex = entry.Value;
+			for (int i = 0; i < row; i++)
+			{
+				decCipher[i, columnIndex] = cipherMat[i, columnIndex];
+			}
+		}
+
+
+		System.Text.StringBuilder msg = new System.Text.StringBuilder();
+		for (int i = 0; i < row; i++)
+		{
+			for (int j = 0; j < col; j++)
+			{
+				if (decCipher[i, j] != '_')
+				{
+					msg.Append(decCipher[i, j]);
+				}
+			}
+		}
+
+		return msg.ToString();
+	}
+
+	public static void Main(string[] args)
+	{
+
+		string msg = "Geeks for Geeks";
+
+		SetPermutationOrder();
+
+		
+		string cipher = EncryptMessage(msg);
+		Console.WriteLine("Encrypted Message: " + cipher);
+
+		
+		Console.WriteLine("Decrypted Message: " + DecryptMessage(cipher));
+	}
+}
