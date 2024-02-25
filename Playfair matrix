@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <string.h>
+
+// Function to remove spaces and punctuation from the plaintext
+void preprocessText(char *plaintext) {
+    int i, j = 0;
+    for (i = 0; plaintext[i] != '\0'; i++) {
+        if (plaintext[i] != ' ' && plaintext[i] != '.' && plaintext[i] != ',') {
+            plaintext[j++] = plaintext[i];
+        }
+    }
+    plaintext[j] = '\0';
+}
+
+// Function to find the coordinates of a character in the Playfair matrix
+void findCoordinates(int key[][5], char ch, int *row, int *col) {
+    if (ch == 'J') // Replace 'J' with 'I'
+        ch = 'I';
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (key[i][j] == (ch - 'A')) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+// Function to encrypt plaintext using Playfair cipher
+void encryptPlayfair(char *plaintext, int key[][5], int n) {
+    // Preprocess the plaintext
+    preprocessText(plaintext);
+    
+    // Encrypt the plaintext
+    int len = strlen(plaintext);
+    for (int i = 0; i < len; i += 2) {
+        int row1, col1, row2, col2;
+        findCoordinates(key, plaintext[i], &row1, &col1);
+        findCoordinates(key, plaintext[i + 1], &row2, &col2);
+        
+        // If both letters are in the same row
+        if (row1 == row2) {
+            printf("%c%c", key[row1][(col1 + 1) % n] + 'A', key[row2][(col2 + 1) % n] + 'A');
+        }
+        // If both letters are in the same column
+        else if (col1 == col2) {
+            printf("%c%c", key[(row1 + 1) % n][col1] + 'A', key[(row2 + 1) % n][col2] + 'A');
+        }
+        // If neither of the above
+        else {
+            printf("%c%c", key[row1][col2] + 'A', key[row2][col1] + 'A');
+        }
+    }
+}
+
+int main() {
+    // Define the Playfair key matrix (5x5)
+    int key[5][5] = {
+        {'M' - 'A', 'F' - 'A', 'H' - 'A', 'I' - 'A', 'K' - 'A'},
+        {'U' - 'A', 'N' - 'A', 'O' - 'A', 'P' - 'A', 'Q' - 'A'},
+        {'Z' - 'A', 'V' - 'A', 'W' - 'A', 'X' - 'A', 'Y' - 'A'},
+        {'E' - 'A', 'L' - 'A', 'A' - 'A', 'R' - 'A', 'G' - 'A'},
+        {'D' - 'A', 'S' - 'A', 'T' - 'A', 'B' - 'A', 'C' - 'A'}
+    };
+    
+    // Plaintext to encrypt
+    char plaintext[] = "Must see you over Cadogan West. Coming at once.";
+    
+    // Encrypt the plaintext using Playfair cipher
+    encryptPlayfair(plaintext, key, 5);
+    
+    return 0;
+}
