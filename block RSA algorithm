@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+typedef long long int64;
+
+int64 gcd(int64 a, int64 b) {
+    if (b == 0) {
+        return a;
+    }
+    return gcd(b, a % b);
+}
+
+int main() {
+    int64 n = 143 * 199; // Replace with your actual n value
+    int64 e = 17;       // Replace with your actual e value
+
+    int64 knownPlaintextBlock = 42;  // Replace with the actual known plaintext block
+
+    int64 ciphertext1 = fmod(pow(knownPlaintextBlock, e), n);
+    int64 ciphertext2 = fmod(pow(67, e), n); // Replace with another random plaintext block
+
+    int64 commonFactor = gcd(knownPlaintextBlock, n);
+
+    if (commonFactor > 1) {
+        printf("Common factor found: %lld\n", commonFactor);
+
+        int64 otherFactor = n / commonFactor;
+        int64 phi_n = (commonFactor - 1) * (otherFactor - 1);
+
+        int64 d;
+        for (int64 i = 1; i < phi_n; i++) {
+            if ((i * e) % phi_n == 1) {
+                d = i;
+                break;
+            }
+        }
+
+        printf("Calculated private key: %lld\n", d);
+    } else {
+        printf("No common factor found.\n");
+    }
+
+    return 0;
+}
