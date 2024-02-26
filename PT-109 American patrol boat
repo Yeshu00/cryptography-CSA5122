@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-// Function to decrypt Playfair cipher
+
 void decryptPlayfair(char *cipher, int key[][5], int n, int m) {
-    // Traverse the cipher text
+    
     for (int i = 0; i < strlen(cipher); i += 2) {
-        // Find the positions of the characters in the key matrix
+        
         int row1, col1, row2, col2;
         for (int j = 0; j < n; j++) {
             for (int k = 0; k < m; k++) {
@@ -19,7 +19,7 @@ void decryptPlayfair(char *cipher, int key[][5], int n, int m) {
                 }
             }
         }
-        // Decrypt the characters based on their positions
+    
         if (row1 == row2) {
             printf("%c%c", key[row1][(col1 - 1 + m) % m] + 'A', key[row2][(col2 - 1 + m) % m] + 'A');
         } else if (col1 == col2) {
@@ -31,7 +31,7 @@ void decryptPlayfair(char *cipher, int key[][5], int n, int m) {
 }
 
 int main() {
-    // Define the Playfair key matrix (5x5)
+    
     int key[5][5] = {
         { 'K' - 'A', 'X' - 'A', 'J' - 'A', 'E' - 'A', 'Y' - 'A' },
         { 'U' - 'A', 'R' - 'A', 'E' - 'A', 'B' - 'A', 'Z' - 'A' },
@@ -40,10 +40,10 @@ int main() {
         { 'O' - 'A', 'Y' - 'A', 'F' - 'A', 'I' - 'A', 'W' - 'A' }
     };
     
-    // Encrypted message
+
     char cipher[] = "KXJEYUREBEZWEHEWRYTUHEYFSKREHEGOYFIWTTTUOLKSYCAJPOBOTEIZONTXBYBNTGONEYCUZWRGDSONSXBOUYWRHEBAAHYUSEDQ";
     
-    // Decrypt the Playfair cipher
+
     decryptPlayfair(cipher, key, 5, 5);
     
     return 0;
