@@ -3,37 +3,37 @@
 
 #define MAX_LEN 100
 
-// Function to encrypt plaintext using the one-time pad Vigenère cipher
+
 void encrypt(char *plaintext, int *key, char *ciphertext) {
     int len = strlen(plaintext);
     for (int i = 0; i < len; i++) {
-        // Apply the shift based on the key stream
+    
         ciphertext[i] = (plaintext[i] - 'a' + key[i]) % 26 + 'a';
     }
     ciphertext[len] = '\0';
 }
 
-// Function to decrypt ciphertext using the one-time pad Vigenère cipher
+
 void decrypt(char *ciphertext, int *key, char *plaintext) {
     int len = strlen(ciphertext);
     for (int i = 0; i < len; i++) {
-        // Apply the reverse shift based on the key stream
+        
         plaintext[i] = (ciphertext[i] - 'a' - key[i] + 26) % 26 + 'a';
     }
     plaintext[len] = '\0';
 }
 
 int main() {
-    // Define the plaintext and key stream
+
     char plaintext[MAX_LEN] = "sendmoremoney";
     int key[] = {9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9};
     
-    // Encrypt the plaintext
+    
     char ciphertext[MAX_LEN];
     encrypt(plaintext, key, ciphertext);
     printf("Ciphertext: %s\n", ciphertext);
     
-    // Decrypt the ciphertext
+
     char decrypted_plaintext[MAX_LEN];
     decrypt(ciphertext, key, decrypted_plaintext);
     printf("Decrypted plaintext: %s\n", decrypted_plaintext);
