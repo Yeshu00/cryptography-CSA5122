@@ -6,14 +6,14 @@
 #define ALPHABET_SIZE 26
 #define MAX_PLAINTEXTS 10
 
-// English letter frequency distribution
+
 const float english_frequency[ALPHABET_SIZE] = {
     0.0817, 0.0149, 0.0278, 0.0425, 0.1270, 0.0223, 0.0202, 0.0609, 0.0697, 0.0015, 0.0077, 0.0402,
     0.0241, 0.0675, 0.0751, 0.0193, 0.0010, 0.0599, 0.0633, 0.0906, 0.0276, 0.0098, 0.0236, 0.0015,
     0.0197, 0.0007
 };
 
-// Function to calculate the frequency of each letter in a given string
+
 void calculateFrequency(const char *text, float *frequency) {
     int total_letters = 0;
     for (int i = 0; text[i] != '\0'; i++) {
@@ -23,13 +23,12 @@ void calculateFrequency(const char *text, float *frequency) {
         }
     }
 
-    // Normalize the frequencies
+
     for (int i = 0; i < ALPHABET_SIZE; i++) {
         frequency[i] /= total_letters;
     }
 }
 
-// Function to decrypt ciphertext using a given key
 void decrypt(const char *ciphertext, const char *key, char *plaintext) {
     for (int i = 0; ciphertext[i] != '\0'; i++) {
         if (isalpha(ciphertext[i])) {
@@ -42,7 +41,7 @@ void decrypt(const char *ciphertext, const char *key, char *plaintext) {
     plaintext[strlen(ciphertext)] = '\0';
 }
 
-// Function to score the likelihood of a plaintext based on its letter frequency
+
 float scorePlaintext(const float *plaintext_frequency) {
     float score = 0.0;
     for (int i = 0; i < ALPHABET_SIZE; i++) {
@@ -51,13 +50,12 @@ float scorePlaintext(const float *plaintext_frequency) {
     return score;
 }
 
-// Function to perform a letter frequency attack on a monoalphabetic substitution cipher
-void frequencyAttack(const char *ciphertext, char *plaintexts[MAX_PLAINTEXTS], int top_plaintexts) {
-    // Calculate the frequency distribution of letters in the ciphertext
+
+void frequencyAttack(const char *ciphertext, char *plaintexts[MAX_PLAINTEXTS], int top_plaintexts) 
     float frequency[ALPHABET_SIZE] = {0};
     calculateFrequency(ciphertext, frequency);
 
-    // Generate a key based on the frequency distribution
+    
     char key[ALPHABET_SIZE];
     for (int i = 0; i < ALPHABET_SIZE; i++) {
         float max_freq = 0;
@@ -72,13 +70,13 @@ void frequencyAttack(const char *ciphertext, char *plaintexts[MAX_PLAINTEXTS], i
         frequency[max_index] = -1; // Mark as processed
     }
 
-    // Decrypt the ciphertext using the generated key
+    
     decrypt(ciphertext, key, plaintexts[0]);
     float max_score = scorePlaintext(frequency);
 
-    // Generate additional possible plaintexts by trying different key permutations
+    
     for (int i = 1; i < top_plaintexts; i++) {
-        // Shuffle the key randomly to explore different permutations
+        
         for (int j = 0; j < ALPHABET_SIZE; j++) {
             int index = rand() % ALPHABET_SIZE;
             char temp = key[j];
@@ -108,7 +106,7 @@ int main() {
         printf("%s\n", plaintexts[i]);
     }
 
-    // Free allocated memory
+    
     for (int i = 0; i < MAX_PLAINTEXTS; i++) {
         free(plaintexts[i]);
     }
