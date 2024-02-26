@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/des.h>
+
+void des_encrypt_decrypt(const unsigned char *input, const unsigned char *key, unsigned char *output, int encrypt) {
+    DES_key_schedule schedule;
+    DES_set_key_unchecked((const_DES_cblock *)key, &schedule);
+
+    if (encrypt) {
+        DES_ecb_encrypt((const_DES_cblock *)input, (DES_cblock *)output, &schedule, DES_ENCRYPT);
+    } else {
+        DES_ecb_encrypt((const_DES_cblock *)input, (DES_cblock *)output, &schedule, DES_DECRYPT);
+    }
+}
+
+int main() {
+    const unsigned char key[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+    const unsigned char plaintext[8] = "Hello123";
+    unsigned char ciphertext[8];
+    unsigned char decrypted_text[8];
+
+    printf("Original Text: %s\n", plaintext);
+
+    des_encrypt_decrypt(plaintext, key, ciphertext, 1);
+
+    printf("Encrypted Text: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+    printf("\n");
+
+    des_encrypt_decrypt(ciphertext, key, decrypted_text, 0);
+
+    printf("Decrypted Text: %s\n", decrypted_text);
+
+    return 0;
+}
