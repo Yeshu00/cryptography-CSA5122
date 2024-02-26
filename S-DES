@@ -1,0 +1,160 @@
+#include <stdio.h>
+
+void permute(int *input, int *output, int *permutation, int size) {
+    for (int i = 0; i < size; ++i) {
+        output[i] = input[permutation[i] - 1];
+    }
+}
+
+void generateRoundKeys(int *key, int *roundKeys) {
+    int keyP10[] = {3, 5, 2, 7, 4, 10, 1, 9, 8, 6};
+    int keyP8[] = {6, 3, 7, 4, 8, 5, 10, 9};
+
+    int permutedKey10[10];
+    permute(key, permutedKey10, keyP10, 10);
+
+    int temp1 = permutedKey10[0];
+    int temp2 = permutedKey10[5];
+    for (int i = 0; i < 4; ++i) {
+        permutedKey10[i] = permutedKey10[i + 1];
+        permutedKey10[i + 5] = permutedKey10[i + 6];
+    }
+    permutedKey10[4] = temp1;
+    permutedKey10[9] = temp2;
+
+    permute(permutedKey10, roundKeys, keyP8, 8);
+
+    temp1 = permutedKey10[0];
+    temp2 = permutedKey10[5];
+    for (int i = 0; i < 4; ++i) {
+        permutedKey10[i] = permutedKey10[i + 1];
+        permutedKey10[i + 5] = permutedKey10[i + 6];
+    }
+    permutedKey10[4] = temp1;
+    permutedKey10[9] = temp2;
+
+    permute(permutedKey10, roundKeys + 8, keyP8, 8);
+}
+
+void xorOperation(int *a, int *b, int size) {
+    for (int i = 0; i < size; ++i) {
+        a[i] ^= b[i];
+    }
+}
+
+void sBoxSubstitution(int *input, int *output) {
+    int sBox[4][4][4] = {
+        {{1, 0, 3, 2}, {3, 2, 1, 0}, {0, 2, 1, 3}, {3, 1, 3, 2}},
+        {{2, 3, 0, 1}, {0, 1, 3, 2}, {3, 0, 1, 3}, {2, 1, 3, 0}},
+        {{1, 0, 2, 3}, {3, 0, 1, 2}, {0, 3, 2, 1}, {2, 1, 0, 3}},
+        {{3, 2, 1, 0}, {2, 0, 3, 1}, {1, 3, 0, 2}, {0, 2, 3, 1}}
+    };
+
+    int row = (input[0] << 1) + input[3];
+    int col = (input[1] << 1) + input[2];
+
+    int value = sBox[row][col][0];
+    output[0] = (value >> 1) & 1;
+    output[1] = value & 1;
+}
+
+void fFunction(int *input, int *key, int *output) {
+    int expandedInput[] = {input[3], input[0], input[1], input[2], input[1], input[2], input[3], input[0]};
+    xorOperation(expandedInput, key, 8);
+
+    int sBoxOutput[2];
+    sBoxSubstitution(expandedInput, sBoxOutput);
+
+    int p4[] = {sBoxOutput[1], sBoxOutput[0]};
+    permute(p4, output, (int[]){2, 4, 3, 1}, 4);
+}
+
+void initialPermutation(int *input, int *output) {
+    permute(input, output, (int[]){2, 6, 3, 1, 4, 8, 5, 7}, 8);
+}
+
+void finalPermutation(int *input, int *output) {
+    permute(input, output, (int[]){4, 1, 3, 5, 7, 2, 8, 6}, 8);
+}
+
+void sDesEncrypt(int *plaintext, int *key, int *iv, int *ciphertext) {
+    int roundKeys[16];
+    generateRoundKeys(key, roundKeys);
+
+    int temp[8], temp2[8];
+    int previousCiphertext[8];
+
+    initialPermutation(iv, previousCiphertext);
+    xorOperation(plaintext, previousCiphertext, 8);
+
+    for (int round = 0; round < 2; ++round) {
+        for (int i = 0; i < 4; ++i) {
+            temp[i] = previousCiphertext[i + 4];
+        }
+
+        fFunction(temp, roundKeys + (round * 8), temp2);
+        xorOperation(previousCiphertext, temp2, 4);
+
+        for (int i = 0; i < 4; ++i) {
+            previousCiphertext[i] = temp[i];
+            previousCiphertext[i + 4] = plaintext[i];
+        }
+    }
+
+    finalPermutation(previousCiphertext, ciphertext);
+}
+
+void sDesDecrypt(int *ciphertext, int *key, int *iv, int *plaintext) {
+    int roundKeys[16];
+    generateRoundKeys(key, roundKeys);
+
+    int temp[8], temp2[8];
+    int previousCiphertext[8];
+
+    initialPermutation(iv, previousCiphertext);
+
+    for (int round = 1; round >= 0; --round) {
+        for (int i = 0; i < 4; ++i) {
+            temp[i] = previousCiphertext[i + 4];
+        }
+
+        fFunction(temp, roundKeys + (round * 8), temp2);
+        xorOperation(previousCiphertext, temp2, 4);
+
+        for (int i = 0; i < 4; ++i) {
+            previousCiphertext[i] = temp[i];
+            previousCiphertext[i + 4] = ciphertext[i];
+        }
+    }
+
+    finalPermutation(previousCiphertext, plaintext);
+    xorOperation(plaintext, iv, 8);
+}
+
+void printBinary(int *binary, int size) {
+    for (int i = 0; i < size; ++i) {
+        printf("%d", binary[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int plaintext[] = {0, 0, 0, 0, 0, 0, 0, 1};
+    int key[] = {0, 1, 1, 1, 1, 1, 1, 0, 1, 0};
+    int iv[] = {1, 0, 1, 0, 1, 0, 1, 0};
+    int ciphertext[8];
+    int decryptedPlaintext[8];
+
+    printf("Plaintext: ");
+    printBinary(plaintext, 8);
+
+    sDesEncrypt(plaintext, key, iv, ciphertext);
+    printf("Ciphertext: ");
+    printBinary(ciphertext, 8);
+
+    sDesDecrypt(ciphertext, key, iv, decryptedPlaintext);
+    printf("Decrypted Plaintext: ");
+    printBinary(decryptedPlaintext, 8);
+
+    return 0;
+}
