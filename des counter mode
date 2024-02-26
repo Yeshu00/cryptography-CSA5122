@@ -1,0 +1,163 @@
+#include <stdio.h>
+
+typedef unsigned char byte;
+
+void generateKey(byte key[], byte subKey1[], byte subKey2[]) {
+    byte p10[] = {3, 5, 2, 7, 4, 10, 1, 9, 8, 6};
+    byte p8[] = {6, 3, 7, 4, 8, 5, 10, 9};
+    byte tempKey[10];
+
+    for (int i = 0; i < 10; i++) {
+        tempKey[i] = key[p10[i] - 1];
+    }
+
+    byte temp = tempKey[0];
+    for (int i = 0; i < 4; i++) {
+        tempKey[i] = tempKey[i + 1];
+    }
+    tempKey[4] = temp;
+
+    for (int i = 0; i < 8; i++) {
+        subKey1[i] = tempKey[p8[i] - 1];
+    }
+
+    temp = tempKey[5];
+    for (int i = 5; i < 9; i++) {
+        tempKey[i] = tempKey[i + 1];
+    }
+    tempKey[9] = temp;
+
+    for (int i = 0; i < 8; i++) {
+        subKey2[i] = tempKey[p8[i] - 1];
+    }
+}
+
+void initialPermutation(byte data[], byte permutedData[]) {
+    byte ip[] = {2, 6, 3, 1, 4, 8, 5, 7};
+
+    for (int i = 0; i < 8; i++) {
+        permutedData[i] = data[ip[i] - 1];
+    }
+}
+
+void expansionPermutation(byte rightHalf[], byte expandedRight[]) {
+    byte ep[] = {4, 1, 2, 3, 2, 3, 4, 1};
+
+    for (int i = 0; i < 8; i++) {
+        expandedRight[i] = rightHalf[ep[i] - 1];
+    }
+}
+
+void xorOperation(byte operand1[], byte operand2[], byte result[], int size) {
+    for (int i = 0; i < size; i++) {
+        result[i] = operand1[i] ^ operand2[i];
+    }
+}
+
+void sBoxSubstitution(byte input[], byte output[]) {
+    byte sBox[2][4][4] = {
+        {{1, 0, 3, 2}, {3, 2, 1, 0}, {0, 2, 1, 3}, {3, 1, 3, 2}},
+        {{0, 1, 2, 3}, {2, 0, 1, 3}, {3, 0, 1, 0}, {2, 1, 0, 3}}
+    };
+    
+    byte row = (input[0] << 1) | input[3];
+    byte col = (input[1] << 1) | input[2];
+    
+    byte value = sBox[input[0]][row][col];
+    
+    for (int i = 0; i < 2; i++) {
+        output[i] = (value >> (1 - i)) & 0x01;
+    }
+}
+
+void permutationP4(byte input[], byte output[]) {
+    byte p4[] = {2, 4, 3, 1};
+    
+    for (int i = 0; i < 4; i++) {
+        output[i] = input[p4[i] - 1];
+    }
+}
+
+void roundFunction(byte data[], byte subKey[]) {
+    byte leftHalf[4], rightHalf[4], expandedRight[8], xorResult[8], sBoxOutput[2], p4Result[4];
+    
+    for (int i = 0; i < 4; i++) {
+        leftHalf[i] = data[i];
+        rightHalf[i] = data[i + 4];
+    }
+
+    expansionPermutation(rightHalf, expandedRight);
+
+    xorOperation(expandedRight, subKey, xorResult, 8);
+
+    sBoxSubstitution(xorResult, sBoxOutput);
+
+    permutationP4(sBoxOutput, p4Result);
+
+    xorOperation(p4Result, leftHalf, xorResult, 4);
+
+    for (int i = 0; i < 4; i++) {
+        data[i] = rightHalf[i];
+        data[i + 4] = xorResult[i];
+    }
+}
+
+void finalPermutation(byte data[], byte permutedData[]) {
+    byte ipInverse[] = {4, 1, 3, 5, 7, 2, 8, 6};
+
+    for (int i = 0; i < 8; i++) {
+        permutedData[i] = data[ipInverse[i] - 1];
+    }
+}
+
+void encryptSDES(byte plaintext[], byte key[], byte ciphertext[]) {
+    byte subKey1[8], subKey2[8], counter[8], permutedCounter[8];
+
+    generateKey(key, subKey1, subKey2);
+
+    byte initialCounter[] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    for (int i = 0; i < 8; i++) {
+        counter[i] = initialCounter[i] ^ i;
+
+        initialPermutation(counter, permutedCounter);
+
+        roundFunction(permutedCounter, subKey1);
+        roundFunction(permutedCounter, subKey2);
+
+        finalPermutation(permutedCounter, ciphertext);
+
+        xorOperation(plaintext, ciphertext, ciphertext, 8);
+
+        printf("Intermediate Result (Block %d): ", i + 1);
+        for (int j = 0; j < 8; j++) {
+            printf("%d", ciphertext[j]);
+        }
+        printf("\n");
+
+        for (int j = 7; j >= 0; j--) {
+            if (counter[j] == 0) {
+                counter[j] = 1;
+                break;
+            } else {
+                counter[j] = 0;
+            }
+        }
+    }
+}
+
+int main() {
+    byte plaintext[] = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0};
+    byte key[] = {0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1};
+    byte ciphertext[8];
+
+    encryptSDES(plaintext, key, ciphertext);
+
+    printf("\nEncrypted Ciphertext: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%d", ciphertext[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
