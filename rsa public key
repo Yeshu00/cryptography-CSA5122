@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int gcd(int a, int b) {
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+
+int mod_inverse(int a, int m) {
+    for (int i = 1; i < m; i++)
+        if ((a * i) % m == 1)
+            return i;
+    return -1;
+}
+
+void generate_keys(int *e, int *d, int *N) {
+    int p = 61;
+    int q = 53;
+    *N = p * q;
+    int phi = (p - 1) * (q - 1);
+    *e = 17;
+    *d = mod_inverse(*e, phi);
+}
+
+int main() {
+    int e, d, N;
+    generate_keys(&e, &d, &N);
+    printf("Public Key (e, N): (%d, %d)\n", e, N);
+    printf("Private Key (d, N): (%d, %d)\n", d, N);
+    return 0;
+}
