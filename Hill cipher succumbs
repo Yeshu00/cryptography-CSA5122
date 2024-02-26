@@ -4,7 +4,7 @@
 #define MAX_PAIRS 100
 #define MAX_SIZE 10
 
-// Function to find the modular inverse of a number
+
 int modInverse(int a, int m) {
     a = a % m;
     for (int x = 1; x < m; x++) {
@@ -14,20 +14,20 @@ int modInverse(int a, int m) {
     return -1;
 }
 
-// Function to perform matrix multiplication
+
 void multiply(int key[MAX_SIZE][MAX_SIZE], int vector[MAX_SIZE], int result[MAX_SIZE], int size) {
     for (int i = 0; i < size; i++) {
         result[i] = 0;
         for (int j = 0; j < size; j++) {
             result[i] += key[i][j] * vector[j];
         }
-        result[i] %= 26; // Take modulo 26
+        result[i] %= 26; 
     }
 }
 
-// Function to perform a known plaintext attack
+
 void knownPlaintextAttack(int plaintext[MAX_PAIRS][MAX_SIZE], int ciphertext[MAX_PAIRS][MAX_SIZE], int size, int pairs) {
-    // Solve the system of linear equations to find the key matrix
+    
     int key[MAX_SIZE][MAX_SIZE];
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -39,7 +39,7 @@ void knownPlaintextAttack(int plaintext[MAX_PAIRS][MAX_SIZE], int ciphertext[MAX
         }
     }
 
-    // Print the key matrix
+    
     printf("Recovered key matrix:\n");
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -53,15 +53,15 @@ int main() {
     int plaintext[MAX_PAIRS][MAX_SIZE], ciphertext[MAX_PAIRS][MAX_SIZE];
     int size, pairs;
 
-    // Get the size of the matrix
+    
     printf("Enter the size of the key matrix: ");
     scanf("%d", &size);
 
-    // Get the number of plaintext-ciphertext pairs
+
     printf("Enter the number of plaintext-ciphertext pairs: ");
     scanf("%d", &pairs);
 
-    // Get the plaintext-ciphertext pairs
+    
     printf("Enter the plaintext-ciphertext pairs:\n");
     for (int i = 0; i < pairs; i++) {
         printf("Pair %d:\n", i + 1);
@@ -75,7 +75,6 @@ int main() {
         }
     }
 
-    // Perform the known plaintext attack
     knownPlaintextAttack(plaintext, ciphertext, size, pairs);
 
     return 0;
