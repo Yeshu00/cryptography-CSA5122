@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <openssl/dsa.h>
+#include <openssl/rand.h>
+
+DSA* generateDSAKeyPair() {
+    DSA* dsa = DSA_new();
+    if (dsa == NULL) {
+        perror("Error creating DSA key pair");
+        exit(EXIT_FAILURE);
+    }
+
+    if (DSA_generate_parameters_ex(dsa, 2048, NULL, 0, NULL, NULL, NULL) != 1) {
+        perror("Error generating DSA parameters");
+        exit(EXIT_FAILURE);
+    }
+
+    if (DSA_generate_key(dsa) != 1) {
+        perror("Error generating DSA key pair");
+        exit(EXIT_FAILURE);
+    }
+
+    return dsa;
+}
+
+void signMessageDSA(DSA* dsa, const unsigned char* message, int message_len) {
+    DSA_SIG* signature = DSA_do_sign(message, message_len, dsa);
+    if (signature == NULL) {
+        perror("Error signing message with DSA");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("DSA Signature:\n");
+    printf("r: %s\n", BN_bn2hex(signature->r));
+    printf("s: %s\n", BN_bn2hex(signature->s));
+    printf("\n");
+
+    DSA_SIG_free(signature);
+}
+
+int main() {
+    const char* message = "Hello, DSA!";
+    int message_len = strlen(message);
+
+    DSA* dsa_key_pair = generateDSAKeyPair();
+
+    printf("Signing Message with DSA:\n");
+    signMessageDSA(dsa_key_pair, (const unsigned char*)message, message_len);
+
+    DSA* dsa_key_pair_2 = generateDSAKeyPair();
+
+    printf("Signing Message with Another DSA Key Pair:\n");
+    signMessageDSA(dsa_key_pair_2, (const unsigned char*)message, message_len);
+
+    DSA_free(dsa_key_pair);
+    DSA_free(dsa_key_pair_2);
+
+    return 0;
+}
