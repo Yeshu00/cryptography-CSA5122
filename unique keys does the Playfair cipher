@@ -9,10 +9,9 @@ unsigned long long factorial(int n) {
 }
 
 int main() {
-    // Total number of keys without considering identical encryption results
+
     unsigned long long total_keys = factorial(25) / factorial(25 - 1);
 
-    // Total number of effectively unique keys considering identical encryption results
     unsigned long long unique_keys = total_keys / (1 << 10); // Divide by 2^10 for symmetries
 
     printf("Total number of keys without considering identical encryption results: %llu\n", total_keys);
